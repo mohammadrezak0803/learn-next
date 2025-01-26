@@ -1,4 +1,34 @@
-export default function Home() {
+// src/app/page.tsx
+
+interface ICourse {
+  id: number;
+  title: string;
+  description: string;
+}
+
+const fetchCourses = async (): Promise<ICourse[]> => {
+  try {
+    const res = await fetch("http://localhost:3000/api/courses", {
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text(); // این برای دریافت جزئیات بیشتر است
+      throw new Error(`Failed to fetch courses. Status: ${res.status}, Response: ${errorText}`);
+    }
+
+    const data = await res.json();
+    return data.courses;
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    throw new Error("Error fetching courses");
+  }
+};
+
+
+export default async function Home() {
+  const courses = await fetchCourses();
+
   return (
     <>
       <section className="bg-blue-600 text-white py-6 px-4">
@@ -13,45 +43,25 @@ export default function Home() {
         <div className="container mx-auto text-center">
           <h2 className="text-2xl font-semibold mb-6">Our Popular Courses</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">React for Beginners</h3>
-              <p className="text-gray-600 mt-2">
-                Learn the basics of React and start building dynamic web
-                applications.
-              </p>
-              <a
-                href="#"
-                className="text-blue-600 mt-4 inline-block hover:text-blue-800"
-              >
-                Learn More
-              </a>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Advanced JavaScript</h3>
-              <p className="text-gray-600 mt-2">
-                Master advanced JavaScript concepts and improve your coding
-                skills.
-              </p>
-              <a
-                href="#"
-                className="text-blue-600 mt-4 inline-block hover:text-blue-800"
-              >
-                Learn More
-              </a>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Web Design Fundamentals</h3>
-              <p className="text-gray-600 mt-2">
-                Understand the core principles of web design and create
-                beautiful websites.
-              </p>
-              <a
-                href="#"
-                className="text-blue-600 mt-4 inline-block hover:text-blue-800"
-              >
-                Learn More
-              </a>
-            </div>
+            {courses.length > 0 ? (
+              courses.map((course) => (
+                <div
+                  key={course.id}
+                  className="bg-white p-6 rounded-lg shadow-lg"
+                >
+                  <h3 className="text-xl font-semibold">{course.title}</h3>
+                  <p className="text-gray-600 mt-2">{course.description}</p>
+                  <a
+                    href="#"
+                    className="text-blue-600 mt-4 inline-block hover:text-blue-800"
+                  >
+                    Learn More
+                  </a>
+                </div>
+              ))
+            ) : (
+              <p>No courses available. Please check back later!</p>
+            )}
           </div>
         </div>
       </section>
